@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from .contract import EARLIEST_VINTAGE_YEAR, EXPECTED_CURRENCY
+from .contract import EARLIEST_VINTAGE_YEAR, EXPECTED_CURRENCY, MAXIMUM_NAV_TO_COMMITMENT_MULTIPLE
 from .feed_reader import RawFeedRow
 from .findings import Finding, RecordDecision, decide_record
 from .model import Position, PositionStatus
@@ -24,6 +24,7 @@ from .rules import RuleId
 # Names the whole row, rather than one field, in a finding about the row's shape.
 ROW_SHAPE_FIELD_NAME = "row_shape"
 VINTAGE_YEAR_OUT_OF_BOUNDS = "vintage_year_out_of_bounds"
+NAV_ABOVE_COMMITMENT_MULTIPLE = f"nav_above_{MAXIMUM_NAV_TO_COMMITMENT_MULTIPLE}x_commitment"
 
 # Plain decimal notation only. Decimal() itself would also accept "NaN",
 # "Infinity" and exponents such as "1e5", none of which is a balance.
@@ -204,6 +205,16 @@ def _validate_row(raw_row: RawFeedRow, duplicated_keys: set[str], run_date: date
         # The client's rule: a Closed position is fully exited, so a residual NAV
         # is a bug on their side to flag, never a value to land.
         _reject_field(findings, RuleId.R3, "nav", raw_values["nav"])
+
+    # A zero commitment (a secondary purchase, or W1's default) gives no
+    # meaningful ratio, so only a positive commitment is compared.
+    if (
+        commitment is not None
+        and commitment > 0
+        and nav is not None
+        and nav > commitment * MAXIMUM_NAV_TO_COMMITMENT_MULTIPLE
+    ):
+        findings.append(Finding(RuleId.W6, "nav", detail=NAV_ABOVE_COMMITMENT_MULTIPLE))
 
     reported_source_row_id = None if _is_blank(raw_values["source_row_id"]) else raw_values["source_row_id"]
     if decide_record(findings) is RecordDecision.REJECTED:

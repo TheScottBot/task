@@ -70,6 +70,32 @@ def test_exit_codes_are_the_agreed_values():
     assert (ExitCode.SUCCESS, ExitCode.FAILURE, ExitCode.FILE_EMPTY) == (0, 1, 2)
 
 
+# ── Invocation errors are failures, never mistaken for an empty file ──────────
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["--feed-path", "positions-feed.csv"],
+        ["--database-path", "positions.sqlite3"],
+        [],
+        ["--feed-path", "positions-feed.csv", "--database-path", "positions.sqlite3", "--unknown"],
+    ],
+)
+def test_invalid_arguments_exit_one_not_the_empty_file_code(arguments, caplog):
+    caplog.set_level(logging.INFO, logger="positions_feed")
+    assert main(arguments, current_moment_provider=_fixed_clock) == ExitCode.FAILURE
+    assert any(
+        "invocation outcome=failed reason=invalid_arguments" in record.getMessage()
+        for record in caplog.records
+    )
+
+
+def test_help_exits_zero(capsys):
+    assert main(["--help"], current_moment_provider=_fixed_clock) == ExitCode.SUCCESS
+    assert "--database-path" in capsys.readouterr().out
+
+
 # ── Absent file ───────────────────────────────────────────────────────────────
 
 

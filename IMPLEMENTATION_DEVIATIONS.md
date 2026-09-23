@@ -18,6 +18,7 @@ declines were set by the author in `SPEC.md` for the two-hour timebox.
 | item | done instead | why | covering test |
 |---|---|---|---|
 | Model: `currency` is ISO 4217 | Shape check only: three letters, upper-cased. A well-formed code that does not exist, such as `XYZ`, would land and, not being USD, be flagged W3. | No code list in the standard library (0.13). W3 makes such a value visible rather than silent. | `test_w3_non_usd_currency_lands_flagged` |
+| Validation table: the single source of truth the code reads from | The code's rules table carries two warn rules the spec's table does not, W6 and W7 (`DECISIONS.md` D13, D14). | The author chose to record them in `DECISIONS.md` rather than change `SPEC.md`. | `test_rule_severity_matches_the_specification`, `test_w6_...`, `test_w7_...` |
 | Execution model: a partly written SFTP file | Not handled in code. | A debrief topic in `SPEC.md`: gate on an atomic rename or a `.done` marker. | none |
 
 ## Evaluation record (short form of Stage one)

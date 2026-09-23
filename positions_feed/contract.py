@@ -8,6 +8,7 @@ silently shortened nightly file would look like closed positions downstream.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 # The client's column names, which are also the canonical field names except for
 # ``share_class``, derived from ``fund_name`` rather than delivered.
@@ -26,6 +27,11 @@ SOURCE_COLUMNS: tuple[str, ...] = (
 )
 
 EXPECTED_CURRENCY = "USD"
+
+# A NAV more than this many times the commitment is flagged (W6). A fund worth
+# over three or four times what was invested is exceptional, so five leaves room
+# for a genuinely strong position while catching a dropped digit or a typo.
+MAXIMUM_NAV_TO_COMMITMENT_MULTIPLE = Decimal("5")
 
 # Private-market vintages before this are implausible for the funds this feed
 # carries; the upper bound is the run year, since a fund cannot be vintaged later.

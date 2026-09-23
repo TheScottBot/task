@@ -1,0 +1,440 @@
+{
+  "report_format_version": 1,
+  "feed_file_name": "sample-positions-feed.csv",
+  "ingested_at": "2026-09-23T14:23:42.550927+00:00",
+  "file_outcome": "processed",
+  "refusal_reason_category": null,
+  "counts": {
+    "rows_read": 25,
+    "by_decision": {
+      "rejected": 9,
+      "landed_flagged": 4,
+      "landed_corrected": 3,
+      "landed_clean": 9
+    },
+    "by_reason_category": {
+      "missing_source_row_id": 1,
+      "negative_nav": 1,
+      "closed_with_non_zero_nav": 2,
+      "missing_or_unparseable_required_field": 2,
+      "blank_currency": 1,
+      "duplicate_source_row_id_in_file": 2,
+      "commitment_defaulted_to_zero": 1,
+      "non_usd_currency": 1,
+      "nav_date_not_iso": 2,
+      "fund_name_needed_trimming": 1,
+      "currency_upper_cased": 1,
+      "fund_name_trimmed": 1,
+      "nav_date_normalised_to_iso": 2,
+      "share_class_split_from_fund_name": 3
+    },
+    "by_store_outcome": {
+      "inserted": 16,
+      "unchanged": 0,
+      "superseded": 0
+    }
+  },
+  "records": [
+    {
+      "row_number": 1,
+      "source_row_id": "src-1001",
+      "decision": "landed_clean",
+      "store_outcome": "inserted",
+      "findings": []
+    },
+    {
+      "row_number": 2,
+      "source_row_id": "src-1002",
+      "decision": "landed_clean",
+      "store_outcome": "inserted",
+      "findings": []
+    },
+    {
+      "row_number": 3,
+      "source_row_id": "src-1003",
+      "decision": "landed_clean",
+      "store_outcome": "inserted",
+      "findings": []
+    },
+    {
+      "row_number": 4,
+      "source_row_id": "src-1004",
+      "decision": "rejected",
+      "store_outcome": null,
+      "findings": [
+        {
+          "rule_id": "R5",
+          "severity": "reject",
+          "reason_category": "missing_or_unparseable_required_field",
+          "field": "nav_date",
+          "before": null,
+          "after": null,
+          "value_length": 10,
+          "detail": "slash_date_order_unconfirmed"
+        }
+      ]
+    },
+    {
+      "row_number": 5,
+      "source_row_id": "src-1005",
+      "decision": "landed_corrected",
+      "store_outcome": "inserted",
+      "findings": [
+        {
+          "rule_id": "C4",
+          "severity": "auto_correct",
+          "reason_category": "share_class_split_from_fund_name",
+          "field": "fund_name",
+          "before": "Meridian Growth VI - Class A",
+          "after": "Meridian Growth VI",
+          "value_length": null,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 6,
+      "source_row_id": "src-1006",
+      "decision": "landed_clean",
+      "store_outcome": "inserted",
+      "findings": []
+    },
+    {
+      "row_number": 7,
+      "source_row_id": "src-1007",
+      "decision": "rejected",
+      "store_outcome": null,
+      "findings": [
+        {
+          "rule_id": "DEC-1",
+          "severity": "reject",
+          "reason_category": "duplicate_source_row_id_in_file",
+          "field": "source_row_id",
+          "before": null,
+          "after": null,
+          "value_length": null,
+          "detail": null
+        },
+        {
+          "rule_id": "W5",
+          "severity": "warn",
+          "reason_category": "fund_name_needed_trimming",
+          "field": "fund_name",
+          "before": null,
+          "after": null,
+          "value_length": null,
+          "detail": null
+        },
+        {
+          "rule_id": "C2",
+          "severity": "auto_correct",
+          "reason_category": "fund_name_trimmed",
+          "field": "fund_name",
+          "before": "North Haven VII ",
+          "after": "North Haven VII",
+          "value_length": null,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 8,
+      "source_row_id": "src-1007",
+      "decision": "rejected",
+      "store_outcome": null,
+      "findings": [
+        {
+          "rule_id": "DEC-1",
+          "severity": "reject",
+          "reason_category": "duplicate_source_row_id_in_file",
+          "field": "source_row_id",
+          "before": null,
+          "after": null,
+          "value_length": null,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 9,
+      "source_row_id": "src-1009",
+      "decision": "landed_corrected",
+      "store_outcome": "inserted",
+      "findings": [
+        {
+          "rule_id": "C1",
+          "severity": "auto_correct",
+          "reason_category": "currency_upper_cased",
+          "field": "currency",
+          "before": "usd",
+          "after": "USD",
+          "value_length": null,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 10,
+      "source_row_id": "src-1010",
+      "decision": "landed_flagged",
+      "store_outcome": "inserted",
+      "findings": [
+        {
+          "rule_id": "C4",
+          "severity": "auto_correct",
+          "reason_category": "share_class_split_from_fund_name",
+          "field": "fund_name",
+          "before": "Meridian Growth VI - Class A",
+          "after": "Meridian Growth VI",
+          "value_length": null,
+          "detail": null
+        },
+        {
+          "rule_id": "W1",
+          "severity": "warn",
+          "reason_category": "commitment_defaulted_to_zero",
+          "field": "commitment",
+          "before": "N/A",
+          "after": "0",
+          "value_length": null,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 11,
+      "source_row_id": "src-1011",
+      "decision": "rejected",
+      "store_outcome": null,
+      "findings": [
+        {
+          "rule_id": "R2",
+          "severity": "reject",
+          "reason_category": "negative_nav",
+          "field": "nav",
+          "before": null,
+          "after": null,
+          "value_length": 9,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 12,
+      "source_row_id": null,
+      "decision": "rejected",
+      "store_outcome": null,
+      "findings": [
+        {
+          "rule_id": "R1",
+          "severity": "reject",
+          "reason_category": "missing_source_row_id",
+          "field": "source_row_id",
+          "before": null,
+          "after": null,
+          "value_length": 0,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 13,
+      "source_row_id": "src-1013",
+      "decision": "landed_flagged",
+      "store_outcome": "inserted",
+      "findings": [
+        {
+          "rule_id": "W4",
+          "severity": "warn",
+          "reason_category": "nav_date_not_iso",
+          "field": "nav_date",
+          "before": null,
+          "after": null,
+          "value_length": null,
+          "detail": "day_month_abbreviation_year"
+        },
+        {
+          "rule_id": "C3",
+          "severity": "auto_correct",
+          "reason_category": "nav_date_normalised_to_iso",
+          "field": "nav_date",
+          "before": "31-Mar-2026",
+          "after": "2026-03-31",
+          "value_length": null,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 14,
+      "source_row_id": "src-1014",
+      "decision": "landed_clean",
+      "store_outcome": "inserted",
+      "findings": []
+    },
+    {
+      "row_number": 15,
+      "source_row_id": "src-1015",
+      "decision": "rejected",
+      "store_outcome": null,
+      "findings": [
+        {
+          "rule_id": "R3",
+          "severity": "reject",
+          "reason_category": "closed_with_non_zero_nav",
+          "field": "nav",
+          "before": null,
+          "after": null,
+          "value_length": 9,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 16,
+      "source_row_id": "src-1016",
+      "decision": "landed_flagged",
+      "store_outcome": "inserted",
+      "findings": [
+        {
+          "rule_id": "W3",
+          "severity": "warn",
+          "reason_category": "non_usd_currency",
+          "field": "currency",
+          "before": null,
+          "after": null,
+          "value_length": null,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 17,
+      "source_row_id": "src-1017",
+      "decision": "rejected",
+      "store_outcome": null,
+      "findings": [
+        {
+          "rule_id": "R3",
+          "severity": "reject",
+          "reason_category": "closed_with_non_zero_nav",
+          "field": "nav",
+          "before": null,
+          "after": null,
+          "value_length": 9,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 18,
+      "source_row_id": "src-1018",
+      "decision": "landed_corrected",
+      "store_outcome": "inserted",
+      "findings": [
+        {
+          "rule_id": "C4",
+          "severity": "auto_correct",
+          "reason_category": "share_class_split_from_fund_name",
+          "field": "fund_name",
+          "before": "Meridian Growth VI - Class B",
+          "after": "Meridian Growth VI",
+          "value_length": null,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 19,
+      "source_row_id": "src-1019",
+      "decision": "rejected",
+      "store_outcome": null,
+      "findings": [
+        {
+          "rule_id": "R6",
+          "severity": "reject",
+          "reason_category": "blank_currency",
+          "field": "currency",
+          "before": null,
+          "after": null,
+          "value_length": 0,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 20,
+      "source_row_id": "src-1020",
+      "decision": "rejected",
+      "store_outcome": null,
+      "findings": [
+        {
+          "rule_id": "R5",
+          "severity": "reject",
+          "reason_category": "missing_or_unparseable_required_field",
+          "field": "nav_date",
+          "before": null,
+          "after": null,
+          "value_length": 10,
+          "detail": "slash_date_order_unconfirmed"
+        }
+      ]
+    },
+    {
+      "row_number": 21,
+      "source_row_id": "src-1021",
+      "decision": "landed_clean",
+      "store_outcome": "inserted",
+      "findings": []
+    },
+    {
+      "row_number": 22,
+      "source_row_id": "src-1022",
+      "decision": "landed_clean",
+      "store_outcome": "inserted",
+      "findings": []
+    },
+    {
+      "row_number": 23,
+      "source_row_id": "src-1023",
+      "decision": "landed_flagged",
+      "store_outcome": "inserted",
+      "findings": [
+        {
+          "rule_id": "W4",
+          "severity": "warn",
+          "reason_category": "nav_date_not_iso",
+          "field": "nav_date",
+          "before": null,
+          "after": null,
+          "value_length": null,
+          "detail": "day_month_abbreviation_year"
+        },
+        {
+          "rule_id": "C3",
+          "severity": "auto_correct",
+          "reason_category": "nav_date_normalised_to_iso",
+          "field": "nav_date",
+          "before": "31-Mar-2026",
+          "after": "2026-03-31",
+          "value_length": null,
+          "detail": null
+        }
+      ]
+    },
+    {
+      "row_number": 24,
+      "source_row_id": "src-1024",
+      "decision": "landed_clean",
+      "store_outcome": "inserted",
+      "findings": []
+    },
+    {
+      "row_number": 25,
+      "source_row_id": "src-1025",
+      "decision": "landed_clean",
+      "store_outcome": "inserted",
+      "findings": []
+    }
+  ]
+}

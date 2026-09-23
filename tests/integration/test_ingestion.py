@@ -6,6 +6,7 @@ import pytest
 
 from positions_feed.findings import RecordDecision
 from positions_feed.ingestion import FileOutcome, ingest_feed_file
+from positions_feed.rules import RuleId
 from positions_feed.store import PositionStore, StoreOutcome
 from tests.conftest import (
     FIXED_INGESTION_MOMENT,
@@ -82,6 +83,82 @@ def test_rejected_redelivery_leaves_the_stored_position_alone(tmp_path, in_memor
     assert _store_outcomes(later_result) == [None]
     assert str(in_memory_position_store.find_position("test-0001").nav) == "900000.00"
     assert in_memory_position_store.count_audit_entries() == 0
+
+
+# ── W7 commitment lower than previously delivered ─────────────────────────────
+
+
+def _ingest_then_redeliver(tmp_path, position_store, first_commitment, later_commitment):
+    first_feed = write_feed_file(
+        tmp_path, [build_clean_row_values(commitment=first_commitment)], file_name="day-one.csv"
+    )
+    later_feed = write_feed_file(
+        tmp_path,
+        [build_clean_row_values(commitment=later_commitment, nav="950000.00")],
+        file_name="day-two.csv",
+    )
+    ingest_feed_file(first_feed, position_store, FIXED_INGESTION_MOMENT)
+    return ingest_feed_file(later_feed, position_store, FIXED_INGESTION_MOMENT)
+
+
+def _only_record_result(ingestion_result):
+    (record_result,) = ingestion_result.record_results
+    return record_result
+
+
+def test_w7_lower_commitment_than_stored_lands_flagged_with_both_values(
+    tmp_path, in_memory_position_store
+):
+    later_result = _ingest_then_redeliver(tmp_path, in_memory_position_store, "5000000", "4000000")
+    record_result = _only_record_result(later_result)
+    assert record_result.store_outcome == StoreOutcome.SUPERSEDED
+    assert record_result.validated_record.decision == RecordDecision.LANDED_FLAGGED
+    (w7_finding,) = [
+        finding for finding in record_result.validated_record.findings if finding.rule_id == RuleId.W7
+    ]
+    assert w7_finding.field_name == "commitment"
+    assert (w7_finding.value_before, w7_finding.value_after) == ("5000000", "4000000")
+    assert str(in_memory_position_store.find_position("test-0001").commitment) == "4000000"
+    assert in_memory_position_store.count_audit_entries() == 1
+
+
+def test_w7_blank_commitment_that_would_zero_a_known_one_is_flagged(
+    tmp_path, in_memory_position_store
+):
+    later_result = _ingest_then_redeliver(tmp_path, in_memory_position_store, "5000000", "")
+    record_result = _only_record_result(later_result)
+    assert {finding.rule_id for finding in record_result.validated_record.findings} == {
+        RuleId.W1,
+        RuleId.W7,
+    }
+    assert str(in_memory_position_store.find_position("test-0001").commitment) == "0"
+
+
+@pytest.mark.parametrize(
+    "first_commitment, later_commitment",
+    [("5000000", "5000000"), ("5000000", "5000000.00"), ("5000000", "6000000")],
+)
+def test_w7_equal_or_higher_commitment_is_not_flagged(
+    tmp_path, in_memory_position_store, first_commitment, later_commitment
+):
+    later_result = _ingest_then_redeliver(
+        tmp_path, in_memory_position_store, first_commitment, later_commitment
+    )
+    record_result = _only_record_result(later_result)
+    assert RuleId.W7 not in {finding.rule_id for finding in record_result.validated_record.findings}
+
+
+def test_w7_does_not_apply_to_a_first_delivery(tmp_path, in_memory_position_store):
+    feed_path = write_feed_file(tmp_path, [build_clean_row_values(commitment="0")])
+    ingestion_result = ingest_feed_file(feed_path, in_memory_position_store, FIXED_INGESTION_MOMENT)
+    assert _only_record_result(ingestion_result).validated_record.findings == ()
+
+
+def test_w7_rejected_redelivery_is_not_compared(tmp_path, in_memory_position_store):
+    later_result = _ingest_then_redeliver(tmp_path, in_memory_position_store, "5000000", "-1")
+    record_result = _only_record_result(later_result)
+    assert {finding.rule_id for finding in record_result.validated_record.findings} == {RuleId.R5}
+    assert str(in_memory_position_store.find_position("test-0001").commitment) == "5000000"
 
 
 # ── Within-file conflict (DEC-1) ──────────────────────────────────────────────

@@ -102,9 +102,17 @@ def main(
     argument_parser.add_argument("--report-directory", type=Path, default=None,
                                  help="Where the exceptions report and summary are written; "
                                       "defaults to the archive directory, beside the file they describe.")
-    arguments = argument_parser.parse_args(argv)
-
     logging.basicConfig(level=logging.INFO, stream=sys.stderr, format="%(levelname)s %(name)s %(message)s")
+
+    try:
+        arguments = argument_parser.parse_args(argv)
+    except SystemExit as parser_exit:
+        # argparse exits 2 on a usage error, which is this job's empty-file code;
+        # a mistyped crontab must read as a broken job, not as an empty delivery.
+        if parser_exit.code == 0:
+            return ExitCode.SUCCESS
+        _logger.error("invocation outcome=failed reason=invalid_arguments")
+        return ExitCode.FAILURE
 
     run_moment = current_moment_provider()
     try:

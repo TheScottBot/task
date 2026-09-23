@@ -20,8 +20,20 @@
   and findings pinned in a test. Fifteen deliberately planted faults, six of them in
   the date handling, were each caught by the suite; the one first missed (a store
   failure mid-ingest archiving the file) exposed an untested path, so a test was
-  added before moving on. Green tests were not the end of it: running the README
-  steps for real, twice in quick succession, caught an archive name collision the
-  suite had passed. The first design refused to overwrite, which was safe but left
-  the file in the drop folder, the very thing archiving exists to prevent; a
-  same-second archive now takes the next free name and nothing is overwritten.
+  added before moving on.
+- **What green tests missed:** running the README steps for real, twice in quick
+  succession, caught an archive name collision. The first design refused to
+  overwrite, which was safe but left the file in the drop folder, the very thing
+  archiving exists to prevent; a same-second archive now takes the next free name.
+  And when I asked to make the database path optional, the assistant noticed that
+  a missing argument made Python's parser exit 2, which is this job's code for an
+  empty file: a mistyped crontab would have told monitoring the client sent
+  nothing. Invocation errors now exit 1, as a failure.
+- **What the rules missed:** feeding it hand-edited files, I slipped in a
+  commitment of 100 against a NAV of about 2 million, and it landed clean: the spec
+  checked each figure alone, never one against the other. At my request the
+  assistant proposed two warn rules, with thresholds for me to set: W6 flags a NAV
+  more than five times its commitment, and W7 flags a commitment lower than the one
+  last delivered for the same position, which also stops a blank commitment,
+  defaulted to 0, quietly wiping a known value. Both land flagged rather than
+  rejected, and replaying my edited file now flags the 100.

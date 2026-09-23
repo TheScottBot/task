@@ -147,6 +147,23 @@ def test_superseded_positions_are_counted_as_their_own_category(tmp_path, in_mem
     assert later_report["counts"]["by_decision"]["rejected"] == 0
 
 
+def test_lower_commitment_on_redelivery_is_counted_and_summarised(tmp_path, in_memory_position_store):
+    first_feed = write_feed_file(
+        tmp_path, [build_clean_row_values(commitment="5000000")], file_name="day-one.csv"
+    )
+    later_feed = write_feed_file(
+        tmp_path, [build_clean_row_values(commitment="4000000")], file_name="day-two.csv"
+    )
+    ingest_feed_file(first_feed, in_memory_position_store, FIXED_INGESTION_MOMENT)
+    later_result = ingest_feed_file(later_feed, in_memory_position_store, FIXED_INGESTION_MOMENT)
+    later_report = build_structured_report(later_result)
+    assert later_report["counts"]["by_reason_category"] == {
+        "commitment_lower_than_previously_delivered": 1
+    }
+    assert later_report["counts"]["by_decision"]["landed_flagged"] == 1
+    assert "W7 commitment_lower_than_previously_delivered: 1" in render_human_summary(later_result)
+
+
 def test_refused_file_report_names_the_reason_and_has_no_records(tmp_path, in_memory_position_store):
     feed_path = tmp_path / "not-a-feed.csv"
     feed_path.write_bytes(b"\xff\xfe")

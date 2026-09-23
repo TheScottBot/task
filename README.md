@@ -58,7 +58,8 @@ processed feed (and, by default, its reports), for example longer-term storage;
 Exit codes, for the scheduler: `0` clean pass, no file dropped, or a file processed
 with rejected rows (those are data problems, carried by the report); `1` a
 refused file (unreadable, not UTF-8, not CSV, wrong header, over a bound), a store
-failure, or a report or archive that could not be written; `2` an empty file.
+failure, a report or archive that could not be written, or a mistyped command
+(a missing or unknown argument); `2` an empty file, and only that.
 
 ## Proposed setup: a scheduled job
 
@@ -93,8 +94,8 @@ with.
 2. Wait for the scheduled run. No file is not an error: the job logs one line and
    exits 0, so the schedule can fire every night whether or not a file arrived.
 3. Check the outcome. Exit 0 means the file was processed, rejected rows included;
-   1 means the file was refused whole, the store failed, or a report or archive
-   could not be written; 2 means the file was empty. The log line names the
+   1 means the file was refused whole, the store failed, a report or archive
+   could not be written, or the command itself was wrong; 2 means the file was empty. The log line names the
    reason category.
 4. Email that night's `.summary.txt` from `incoming/archive/` back to Meridian as
    the exceptions handoff (their requirement 4), attaching the `.report.json` if

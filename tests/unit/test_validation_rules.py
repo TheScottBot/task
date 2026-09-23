@@ -7,12 +7,18 @@ from decimal import Decimal
 
 import pytest
 
+from positions_feed.contract import MAXIMUM_NAV_TO_COMMITMENT_MULTIPLE
 from positions_feed.feed_reader import RawFeedRow
 from positions_feed.findings import RecordDecision
 from positions_feed.model import PositionStatus
 from positions_feed.nav_dates import SLASH_DATE_ORDER_UNCONFIRMED
 from positions_feed.rules import VALIDATION_RULES, RuleId, Severity
-from positions_feed.validation import ROW_SHAPE_FIELD_NAME, ValidatedRecord, validate_feed_rows
+from positions_feed.validation import (
+    NAV_ABOVE_COMMITMENT_MULTIPLE,
+    ROW_SHAPE_FIELD_NAME,
+    ValidatedRecord,
+    validate_feed_rows,
+)
 from tests.conftest import FIXED_RUN_DATE, build_raw_row
 
 
@@ -58,6 +64,8 @@ def test_rule_reason_categories_are_unique():
         (RuleId.W3, Severity.WARN),
         (RuleId.W4, Severity.WARN),
         (RuleId.W5, Severity.WARN),
+        (RuleId.W6, Severity.WARN),
+        (RuleId.W7, Severity.WARN),
         (RuleId.C1, Severity.AUTO_CORRECT),
         (RuleId.C2, Severity.AUTO_CORRECT),
         (RuleId.C3, Severity.AUTO_CORRECT),
@@ -352,6 +360,47 @@ def test_w4_and_c3_written_month_nav_date_is_normalised_and_flagged(non_iso_nav_
     assert c3_finding.value_after == "2026-03-31"
     assert validated_record.position.nav_date == date(2026, 3, 31)
     assert validated_record.decision == RecordDecision.LANDED_FLAGGED
+
+
+# ── W6 NAV implausibly high against commitment ────────────────────────────────
+
+
+def test_w6_nav_above_five_times_commitment_lands_flagged():
+    validated_record = _validate_single_row(commitment="100", nav="2061750.00")
+    assert _rule_ids(validated_record) == {RuleId.W6}
+    w6_finding = _only_finding_for(validated_record, RuleId.W6)
+    assert w6_finding.field_name == "nav"
+    assert w6_finding.detail == NAV_ABOVE_COMMITMENT_MULTIPLE
+    assert validated_record.decision == RecordDecision.LANDED_FLAGGED
+    assert validated_record.position.nav == Decimal("2061750.00")
+
+
+@pytest.mark.parametrize(
+    "commitment, nav, expected_rule_ids",
+    [
+        ("1000000", "5000000", set()),
+        ("1000000", "5000000.00", set()),
+        ("1000000", "5000000.01", {RuleId.W6}),
+        ("1500000", "1870900.75", set()),
+        # Far below commitment is normal for an older fund that has paid cash back.
+        ("2000000", "412300.10", set()),
+        ("1000000", "0", set()),
+    ],
+)
+def test_w6_threshold_is_strictly_above_five_times(commitment, nav, expected_rule_ids):
+    assert _rule_ids(_validate_single_row(commitment=commitment, nav=nav)) == expected_rule_ids
+
+
+def test_w6_does_not_apply_to_an_explicit_zero_commitment():
+    assert _validate_single_row(commitment="0", nav="2000000").findings == ()
+
+
+def test_w6_does_not_apply_to_a_commitment_defaulted_by_w1():
+    assert _rule_ids(_validate_single_row(commitment="N/A", nav="2000000")) == {RuleId.W1}
+
+
+def test_w6_multiple_comes_from_the_contract():
+    assert MAXIMUM_NAV_TO_COMMITMENT_MULTIPLE == Decimal("5")
 
 
 # ── W5 and C2 fund name trimmed ───────────────────────────────────────────────

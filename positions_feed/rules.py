@@ -30,6 +30,8 @@ class RuleId(Enum):
     W3 = "W3"
     W4 = "W4"
     W5 = "W5"
+    W6 = "W6"
+    W7 = "W7"
     C1 = "C1"
     C2 = "C2"
     C3 = "C3"
@@ -76,6 +78,10 @@ VALIDATION_RULES: dict[RuleId, RuleDefinition] = dict(
                 "nav_date arrived in a non-ISO format: landed, normalisation recorded"),
         _define(RuleId.W5, Severity.WARN, "fund_name_needed_trimming",
                 "fund_name arrived with surrounding whitespace: landed, trim recorded"),
+        _define(RuleId.W6, Severity.WARN, "nav_high_against_commitment",
+                "nav more than five times a non-zero commitment: landed, to be confirmed as not a typo"),
+        _define(RuleId.W7, Severity.WARN, "commitment_lower_than_previously_delivered",
+                "commitment below the value last delivered for this position: landed, since the latest delivery wins, and flagged because a commitment should not fall"),
         _define(RuleId.C1, Severity.AUTO_CORRECT, "currency_upper_cased",
                 "currency in lower case: upper-cased"),
         _define(RuleId.C2, Severity.AUTO_CORRECT, "fund_name_trimmed",
