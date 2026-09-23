@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "positions-feed"
+version = "0.1.0"
+description = "Ingests and validates the Meridian Capital positions feed into a canonical position store"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+# The core depends on the standard library only.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.4",
+    "mypy>=1.8",
+]
+
+[project.scripts]
+positions-feed = "positions_feed.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["positions_feed*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# Verbose, descriptive names are a project requirement; do not let the linter
+# push toward terse identifiers.
+select = ["E", "F", "W", "I", "UP", "B", "N"]
+ignore = [
+    "E501",  # long descriptive names are intentional
+]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["positions_feed"]
+disallow_untyped_defs = true

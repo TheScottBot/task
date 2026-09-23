@@ -17,8 +17,9 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
-# Local position stores; the store is runtime state, never source
+# Runtime state, never source: the position store and the local drop folder
 *.sqlite3
+incoming/
 
 # Editors
 .idea/
