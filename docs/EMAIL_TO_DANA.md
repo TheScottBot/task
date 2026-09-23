@@ -8,7 +8,7 @@ through. We have run the file through our validator, and the per-file report is
 attached (the `.summary.txt`, with the full JSON report alongside).
 
 **Headline:** 16 of 25 rows would land today. The 9 that would not are all
-fixable at source, and none points to a problem with the file format itself.
+fixable at source, and none points to a problem with the file's structure.
 
 **Blocking: rows we did not ingest**
 
@@ -50,4 +50,4 @@ fixable at source, and none points to a problem with the file format itself.
   on completion, we will never read a half-written file.
 
 Kind regards,
-Scott
+S
