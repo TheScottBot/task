@@ -1,7 +1,7 @@
 """Shared fixtures, builders and constants for the positions feed test suite.
 
 Every row built here is synthetic. The only other fixture is the provided
-fictional sample feed, read in place from ``AdditionalReferences`` so there is
+fictional sample feed, read in place from ``additional_references`` so there is
 exactly one copy of it in the tree.
 """
 
@@ -19,7 +19,7 @@ from positions_feed.feed_reader import RawFeedRow
 from positions_feed.store import PositionStore
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
-SAMPLE_FEED_PATH = REPOSITORY_ROOT / "AdditionalReferences" / "sample-positions-feed.csv"
+SAMPLE_FEED_PATH = REPOSITORY_ROOT / "additional_references" / "sample-positions-feed.csv"
 
 FIXED_INGESTION_MOMENT = datetime(2026, 9, 23, 2, 0, tzinfo=UTC)
 FIXED_RUN_DATE = FIXED_INGESTION_MOMENT.date()

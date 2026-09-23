@@ -27,9 +27,9 @@ Read on 23 September 2026.
 
 | item | source | version |
 |---|---|---|
-| Engineering datum | `AdditionalReferences/ENGINEERING_DATUM.md` | version 2, 20 September 2026 |
+| Engineering datum | `additional_references` | version 2, 20 September 2026 |
 | Reference implementation | `https://github.com/FtrOnOff/ftrio-python`, confirmed to exist at that path | commit `b95ec4e1feaf1b3c74a30a43edd5e03c90f7ad68`, 8 July 2026 |
-| Assignment, mapping notes, sample feed | `https://github.com/tangiblemarkets/fde-assignment`, copied verbatim into `AdditionalReferences/` | commit `ebdbb6c7fbf880a0cc7ae8a2f355c670f764b570`, 17 August 2026 |
+| Assignment, mapping notes, sample feed | `https://github.com/tangiblemarkets/fde-assignment`, copied verbatim into `additional_references` | commit `ebdbb6c7fbf880a0cc7ae8a2f355c670f764b570`, 17 August 2026 |
 | Toolchain | CPython on Windows 11 (arm64) | Python 3.14.7, pytest 9.1.1, ruff 0.16.8, mypy 2.3.1 |
 
 Taken from ftrio-python: package layout with `tests/unit` and `tests/integration`,

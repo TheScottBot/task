@@ -6,22 +6,22 @@ auto-correct), and lands what passes in a file-backed SQLite store keyed on the
 client's `source_row_id`. Re-running it on the same file changes nothing.
 
 Built against [SPEC.md](SPEC.md), which applies the engineering datum in
-`AdditionalReferences/ENGINEERING_DATUM.md`. The assignment, the client's field
-notes and the sample feed are in `AdditionalReferences/`, copied verbatim from
+`additional_references`. The assignment, the client's field
+notes and the sample feed are in `additional_references`, copied verbatim from
 `https://github.com/tangiblemarkets/fde-assignment`. The core uses the standard
 library only.
 
 ## Running it
 
 Python 3.11 or later. A run archives the file it processed, so copy the sample
-into a drop folder first rather than pointing the job at `AdditionalReferences/`.
+into a drop folder first rather than pointing the job at `additional_references`.
 From the repository root, on Windows (PowerShell):
 
 ```console
 py -3 -m venv .venv
 .venv\Scripts\python -m pip install -e ".[dev]"
 New-Item -ItemType Directory -Force incoming
-Copy-Item AdditionalReferences\sample-positions-feed.csv incoming\
+Copy-Item additional_references\sample-positions-feed.csv incoming\
 .venv\Scripts\python -m positions_feed --feed-path incoming\sample-positions-feed.csv --database-path positions.sqlite3
 ```
 
@@ -31,7 +31,7 @@ On Linux or macOS:
 python3 -m venv .venv
 .venv/bin/python -m pip install -e ".[dev]"
 mkdir -p incoming
-cp AdditionalReferences/sample-positions-feed.csv incoming/
+cp additional_references/sample-positions-feed.csv incoming/
 .venv/bin/python -m positions_feed --feed-path incoming/sample-positions-feed.csv --database-path positions.sqlite3
 ```
 
