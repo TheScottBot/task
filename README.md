@@ -3,13 +3,25 @@
 A scheduled batch job that ingests Meridian Capital's nightly positions CSV,
 validates every row into a structured exceptions report (reject, warn or
 auto-correct), and lands what passes in a file-backed SQLite store keyed on the
-client's `source_row_id`. Re-running it on the same file changes nothing.
+client's `source_row_id`. Re-running it on the same file changes nothing. The core
+uses the standard library only.
 
-Built against [SPEC.md](SPEC.md), which applies the engineering datum in
-`additional_references`. The assignment, the client's field
-notes and the sample feed are in `additional_references`, copied verbatim from
-`https://github.com/tangiblemarkets/fde-assignment`. The core uses the standard
-library only.
+On the provided sample it lands 16 of 25 rows and rejects 9, each with a reason
+the client can act on.
+
+## What is here
+
+| Path | What it holds |
+|---|---|
+| `positions_feed/` | The job: reader, validation, store, report, archive, CLI |
+| `tests/` | Unit and integration tests, written before the code they cover |
+| `reports/` | The sample validation report from the provided feed: `.report.json` and `.summary.txt` |
+| `docs/EMAIL_TO_DANA.md` | The follow-up email to Meridian (assignment Part 2) |
+| `docs/AI_USAGE_NOTE.md` | How AI was used, and where it was corrected (assignment Part 3) |
+| [SPEC.md](SPEC.md) | The specification this was built against |
+| [DECISIONS.md](DECISIONS.md) | Every decision taken during the build |
+| [IMPLEMENTATION_DEVIATIONS.md](IMPLEMENTATION_DEVIATIONS.md) | Departures from the engineering datum and the spec |
+| `additional_references/` | The assignment, the client's field notes and the sample feed, copied verbatim from `https://github.com/tangiblemarkets/fde-assignment`, plus the engineering datum the spec applies |
 
 ## Running it
 
@@ -47,13 +59,14 @@ sample-positions-feed.20260923T060000Z.summary.txt  the summary, for the per-fil
 
 So each night's file sits beside the reports on it, and no night's report replaces
 another's. Nothing is ever overwritten: a second file processed in the same second
-gets `-2` added to all three names, and so on. The sample report from the provided
-feed is in [reports/](reports/). Copy the sample in and run it again and every
-landed position reports `unchanged`.
+gets `-2` added to all three names, and so on. Copy the sample in and run it again
+and every landed position reports `unchanged`.
 
-Two optional arguments move things elsewhere: `--archive-directory` for the
-processed feed (and, by default, its reports), for example longer-term storage;
-`--report-directory` for the reports alone.
+`--database-path` is required, deliberately: a default derived from anything that
+can change would quietly start a new, empty store. Two optional arguments move
+output elsewhere: `--archive-directory` for the processed feed (and, by default,
+its reports), for example longer-term storage; `--report-directory` for the
+reports alone.
 
 Exit codes, for the scheduler: `0` clean pass, no file dropped, or a file processed
 with rejected rows (those are data problems, carried by the report); `1` a
@@ -94,9 +107,9 @@ with.
 2. Wait for the scheduled run. No file is not an error: the job logs one line and
    exits 0, so the schedule can fire every night whether or not a file arrived.
 3. Check the outcome. Exit 0 means the file was processed, rejected rows included;
-   1 means the file was refused whole, the store failed, a report or archive
-   could not be written, or the command itself was wrong; 2 means the file was empty. The log line names the
-   reason category.
+   1 means the file was refused whole, the store failed, a report or archive could
+   not be written, or the command itself was wrong; 2 means the file was empty.
+   The log line names the reason category.
 4. Email that night's `.summary.txt` from `incoming/archive/` back to Meridian as
    the exceptions handoff (their requirement 4), attaching the `.report.json` if
    they want the detail.
@@ -125,46 +138,60 @@ surrounds it.
 .venv\Scripts\mypy
 ```
 
-Every rule in the validation table has its own tests, and
-`tests/integration/test_sample_feed.py` pins the exact decision and findings for
-each of the 25 sample rows. CI runs the same three commands on Python 3.11 to 3.14.
+291 tests, run locally on Python 3.14. Every rule in the validation table has its
+own tests, and `tests/integration/test_sample_feed.py` pins the exact decision and
+findings for each of the 25 sample rows. Beyond the suite, each key check was
+proven by deliberately breaking the code and confirming a test failed. The CI
+workflow in `.github/workflows/ci.yml` runs the same three commands on Python 3.11
+to 3.14.
 
 ## Design decisions
 
-1. **Severity decides fate, from one table.** `positions_feed/rules.py` is the
-   validation table in `SPEC.md`; a reject never lands, a warn lands flagged, an
-   auto-correct lands with its before and after recorded. Nothing is changed silently.
+1. **Severity decides fate, from one table.** `positions_feed/rules.py` holds the
+   validation rules; a reject never lands, a warn lands flagged, an auto-correct
+   lands with its before and after recorded. Nothing is changed silently.
 2. **Every problem on a row is reported,** not just the first, so the client can fix
    a row in one pass rather than one problem per night.
 3. **Two conflict mechanisms, kept apart.** A key repeated within one file rejects
    every row carrying it (DEC-1: file order is not relied on). The same key in a
    later file with changed values supersedes the stored row and writes an audit row
    (previous, new, reason, time, file), reported as `superseded`, never as a reject.
-4. **Idempotency lives in the logic.** Look up, then insert, no-op or supersede.
-   Values compare numerically, so `2210800.00` against `2210800` is not a change.
-5. **One transaction per file.** A crash part way through rolls the whole file back.
-6. **Money is `Decimal`,** stored as text, never a float, so balances reconcile to the cent.
-7. **The file is hostile until proven otherwise.** Size, row count and field length
+4. **Idempotency lives in the logic, one transaction per file.** Look up, then
+   insert, no-op or supersede; values compare numerically, so `2210800.00` against
+   `2210800` is not a change. A crash part way through rolls the whole file back.
+5. **Money is `Decimal`,** stored as text, never a float, so balances reconcile to the cent.
+6. **The file is hostile until proven otherwise.** Size, row count and field length
    are bounded from the contract (`positions_feed/contract.py`); the header must
    match exactly; anything structural refuses the whole file rather than reading
-   around it. Absent, empty and refused files are three different outcomes.
-8. **Dates are refused rather than guessed.** A written month (`31-Mar-2026`) is
+   around it. Keys are never trimmed, since a padded `source_row_id` could merge or
+   split positions across deliveries. Absent, empty and refused files are three
+   different outcomes.
+7. **Dates are refused rather than guessed.** A written month (`31-Mar-2026`) is
    normalised to ISO. A slash date (`03/31/2026`) is rejected and flagged until the
    client confirms whether it is month first or day first. The policy is one table in
    `positions_feed/nav_dates.py`.
+8. **Figures are checked against each other and against history.** A NAV more than
+   five times its commitment is flagged (W6), catching a typo that each figure alone
+   would pass. A commitment lower than the one last delivered is flagged (W7), which
+   also stops a blank commitment, defaulted to 0, quietly wiping a known value.
 9. **Personal data stays in the store.** `account_holder` and `advisor_email` never
    appear in a report or a log line; a reject records a field's length, not its value.
-10. **Keys are never trimmed.** A padded `source_row_id` is rejected, since trimming
-    it could silently merge or split positions across deliveries.
+10. **Every delivery leaves a paired trail.** The job archives each file it read with
+    its report and summary under one timestamped name, never overwriting, so the
+    drop folder is empty for the next night and any past night can be reconstructed.
 
 Decisions made during the build are in [DECISIONS.md](DECISIONS.md); departures
-from the datum are in [IMPLEMENTATION_DEVIATIONS.md](IMPLEMENTATION_DEVIATIONS.md).
+from the datum and the spec are in
+[IMPLEMENTATION_DEVIATIONS.md](IMPLEMENTATION_DEVIATIONS.md).
 
 ## At 100k rows (debrief notes)
 
 - Stream rows and batch the store writes (one transaction per file still holds);
-  add an index-backed bulk lookup rather than one `SELECT` per row.
+  add an index-backed bulk lookup rather than one `SELECT` per row, which W7's
+  comparison against the store would otherwise double.
 - Gate on an atomic rename or a `.done` marker so a file still arriving over SFTP is
   never read part way through.
 - Fuzz the CSV reader in CI, the first check to add at real scale.
 - Record a digest per delivered file so an identical re-send can short-circuit.
+- Collapse a row that is blank but for its key into a single reject, and count
+  warnings only on rows that landed, so a badly broken file still reads clearly.
